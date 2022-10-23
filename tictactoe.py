@@ -24,7 +24,16 @@ def player(board):
     """
     numxX, numO = 0
     for row in board:
-        pass
+        for cell in row:
+            if cell == 'X':
+                numX += 1
+            elif cell == 'O':
+                numO +=1
+    
+    if numX > numO:
+        return "O"
+    else:
+        return "X"
     raise NotImplementedError
 
 

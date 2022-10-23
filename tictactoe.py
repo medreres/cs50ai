@@ -66,7 +66,7 @@ def result(board, action):
 
 def winner(board):
     """
-    Returns the winner of the game, if there is one.
+    Returns the winner of the game, if there is one, else returns None.
     """
     # ? detect winner
     combinations = [((0, 0), (0, 1), (0, 2)),
@@ -93,7 +93,18 @@ def terminal(board):
     """
     Returns True if game is over, False otherwise.
     """
-    raise NotImplementedError
+
+    # if at least one cell is None, then board is not filled full yet
+    allCellsAreFilled = True
+    for row in board:
+        for cell in row:
+            if cell is None:
+                allCellsAreFilled = False
+
+    if allCellsAreFilled or winner(board):
+        return True
+    else:
+        return False
 
 
 def utility(board):

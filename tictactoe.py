@@ -2,6 +2,7 @@
 Tic Tac Toe Player
 """
 
+import copy
 import math
 
 X = "X"
@@ -28,8 +29,8 @@ def player(board):
             if cell == 'X':
                 numX += 1
             elif cell == 'O':
-                numO +=1
-    
+                numO += 1
+
     if numX > numO:
         return "O"
     else:
@@ -45,7 +46,7 @@ def actions(board):
     for i in range(3):
         for j in range(3):
             if board[i][j] == None:
-                actions.add((i,j))
+                actions.add((i, j))
     return actions
 
 
@@ -53,14 +54,39 @@ def result(board, action):
     """
     Returns the board that results from making move (i, j) on the board.
     """
-    raise NotImplementedError
+    # TODO action is not valid
+    if len(action) == 0:
+        raise Exception("Action is not valid")
+
+    # ? action returns (i,j)
+    boardWithAction = copy.deepcopy(board)
+    boardWithAction[action[0]][action[1]] = player(board)
+    return boardWithAction
 
 
 def winner(board):
     """
     Returns the winner of the game, if there is one.
     """
-    raise NotImplementedError
+    # ? detect winner
+    combinations = [((0, 0), (0, 1), (0, 2)),
+                    ((1, 0), (1, 1), (1, 2)),
+                    ((2, 0), (2, 1), (2, 2)),
+                    ((1, 0), (2, 0), (3, 0)),
+                    ((1, 1), (2, 1), (3, 1)),
+                    ((1, 2), (2, 2), (3, 2)),
+                    ((0, 0), (1, 1), (2, 2)),
+                    ((0, 2), (1, 1), (2, 0))]
+    
+    for combination in combinations:
+        i,j = combination[0]
+        i1,j1 = combination[1]
+        i2,j2 = combination[2]
+        if board[i][j] == board[i1][j1] == board[i2][j2]:
+            return board[i][j]
+
+    # no winner is detected
+    return None
 
 
 def terminal(board):

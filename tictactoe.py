@@ -4,6 +4,7 @@ Tic Tac Toe Player
 
 import copy
 import math
+import random
 
 X = "X"
 O = "O"
@@ -23,7 +24,7 @@ def player(board):
     """
     Returns player who has the next turn on a board.
     """
-    numxX, numO = 0
+    numX, numO = 0, 0
     for row in board:
         for cell in row:
             if cell == 'X':
@@ -35,30 +36,30 @@ def player(board):
         return "O"
     else:
         return "X"
-    raise NotImplementedError
 
 
 def actions(board):
     """
     Returns set of all possible actions (i, j) available on the board.
     """
-    actions = ()
+    actions = []
     for i in range(3):
         for j in range(3):
             if board[i][j] == None:
-                actions.add((i, j))
-    return actions
+                actions.append((i, j))
+    if len(actions):
+        return actions
+    else:
+        return None
 
 
 def result(board, action):
     """
     Returns the board that results from making move (i, j) on the board.
     """
-    # TODO action is not valid
-    if len(action) == 0:
+    if action == None:
         raise Exception("Action is not valid")
 
-    # ? action returns (i,j)
     boardWithAction = copy.deepcopy(board)
     boardWithAction[action[0]][action[1]] = player(board)
     return boardWithAction
@@ -72,16 +73,16 @@ def winner(board):
     combinations = [((0, 0), (0, 1), (0, 2)),
                     ((1, 0), (1, 1), (1, 2)),
                     ((2, 0), (2, 1), (2, 2)),
-                    ((1, 0), (2, 0), (3, 0)),
-                    ((1, 1), (2, 1), (3, 1)),
-                    ((1, 2), (2, 2), (3, 2)),
+                    ((0, 0), (1, 0), (2, 0)),
+                    ((0, 1), (1, 1), (2, 1)),
+                    ((0, 2), (1, 2), (2, 2)),
                     ((0, 0), (1, 1), (2, 2)),
                     ((0, 2), (1, 1), (2, 0))]
-    
+
     for combination in combinations:
-        i,j = combination[0]
-        i1,j1 = combination[1]
-        i2,j2 = combination[2]
+        i, j = combination[0]
+        i1, j1 = combination[1]
+        i2, j2 = combination[2]
         if board[i][j] == board[i1][j1] == board[i2][j2]:
             return board[i][j]
 
@@ -111,11 +112,80 @@ def utility(board):
     """
     Returns 1 if X has won the game, -1 if O has won, 0 otherwise.
     """
-    raise NotImplementedError
+    wnr = winner(board)
+    if wnr == 'X':
+        return 1
+    elif wnr == 'O':
+        return -1
+    else:
+        return 0
 
 
 def minimax(board):
     """
     Returns the optimal action for the current player on the board.
     """
-    raise NotImplementedError
+
+    actionOutcome = []
+    acts = actions(board)
+    for action in acts:
+        actionOutcome.append(maxValue(result(board,action)))
+
+    # actionOutcome.sort()
+    optimal = min(actionOutcome)
+
+    return acts[actionOutcome.index(optimal)]
+
+
+
+
+
+    # # if game is over return None
+    # if terminal(board):
+    #     return None
+
+    # # take all possible actions and chose the best one
+    # acts = actions(board)
+
+    # if acts is not None:
+
+    #     # take action and pass to result func let  make move
+    #     outcomes = []
+    #     for act in acts:
+    #         rslt = result(board, act)
+
+    #         if terminal(rslt):
+    #             return utility(rslt)
+
+    #         outcomes.append({'score': minimax(rslt), 'action': act})
+
+    #     # take max value from outcomes
+
+    # # call minimax for all of the acts and find out which is best
+    #     ...
+
+
+def maxValue(board):
+    if terminal(board):
+        return utility(board)
+
+    v = float(-math.inf)
+
+    for action in actions(board):
+        v = max(v, minValue(result(board, action)))
+    
+    return v
+
+    
+
+
+def minValue(board):
+    if terminal(board):
+        return utility(board)
+    
+    v = float(math.inf)
+
+    for action in actions(board):
+        v = min(v, maxValue(result(board, action)))
+
+    return v

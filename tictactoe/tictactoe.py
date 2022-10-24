@@ -188,4 +188,6 @@ def minValue(board):
     for action in actions(board):
         v = min(v, maxValue(result(board, action)))
 
+        # if v less from all the choices available - do not study this branch deeper
+
     return v

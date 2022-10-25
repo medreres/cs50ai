@@ -94,8 +94,6 @@ def shortest_path(source, target):
     If no possible path, returns None.
     """
 
-    # TODO
-
     queue = QueueFrontier()
     root = Node(source, None, None)
     for actor in neighbors_for_person(source):
@@ -106,32 +104,27 @@ def shortest_path(source, target):
         #  ('104257', '129'), ('112384', '158'), ('112384', '102'), ('112384', '641')}
         queue.add(Node(state=actor[1], parent=root, action=actor[0]))
 
-    # id of visited films(film_id)
+    # id of visited actors(person_id)
     visited = []
 
     while not queue.empty():
         actor = queue.remove()
         # if not the target, then add all his neighbours to the queue
-        if actor.state != target:
-            visited.append(actor.action)
-            for neighbour in neighbors_for_person(actor.state):
-                neighbour = Node(
-                    state=neighbour[1], parent=actor, action=neighbour[0])
+        visited.append(actor.state)
+        for neighbour in neighbors_for_person(actor.state):
+            neighbour = Node(
+                state=neighbour[1], parent=actor, action=neighbour[0])
 
-                # if film is already visited then pass
-                if neighbour.action in visited:
-                    continue
+            # if film is already visited then pass
+            if neighbour.state in visited:
+                continue
 
-                # if target, return the path
-                if neighbour.state == target:
-                    return path(neighbour, source)
+            # if target, return the path
+            if neighbour.state == target:
+                return path(neighbour, source)
 
-                # else add to the queue
-                queue.add(neighbour)
-        else:
-            # if target create list and backtrack
-            # (movie_id, person_id)
-            return path(actor, source)
+            # else add to the queue
+            queue.add(neighbour)
 
     return None
 

@@ -85,6 +85,7 @@ def main():
 
 
 # Kevin Bacon
+# Dustin Hoffman
 def shortest_path(source, target):
     """
     Returns the shortest list of (movie_id, person_id) pairs
@@ -96,30 +97,53 @@ def shortest_path(source, target):
     # TODO
 
     queue = QueueFrontier()
+    root = Node(source, None, None)
     for actor in neighbors_for_person(source):
+        if actor[1] == source:
+            continue
         # filmd id, person id
-        #{('104257', '193'), ('104257', '197'), ('112384', '200'), ('104257', '102'),
+        # {('104257', '193'), ('104257', '197'), ('112384', '200'), ('104257', '102'),
         #  ('104257', '129'), ('112384', '158'), ('112384', '102'), ('112384', '641')}
-        queue.add(Node(actor, source, people[actor[1]['movies']]))
+        queue.add(Node(state=actor[1], parent=root, action=actor[0]))
 
-    # id of visited films
+    # id of visited films(film_id)
     visited = []
 
     while not queue.empty():
         actor = queue.remove()
         # if not the target, then add all his neighbours to the queue
-        if actor.state[1] != target:
-            visited.append(actor.state[0])
+        if actor.state != target:
+            visited.append(actor.action)
             for neighbour in neighbors_for_person(actor.state):
+                neighbour = Node(
+                    state=neighbour[1], parent=actor, action=neighbour[0])
+
                 # if film is already visited then pass
-                if neighbour[0] in visited:
+                if neighbour.action in visited:
                     continue
+
+                # if target, return the path
+                if neighbour.state == target:
+                    return path(neighbour, source)
+
                 # else add to the queue
-                queue.add(Node(neighbour[1], actor.state, neighbour[0]))
+                queue.add(neighbour)
         else:
-            pass
+            # if target create list and backtrack
+            # (movie_id, person_id)
+            return path(actor, source)
 
     return None
+
+
+def path(actor: Node, target: str) -> list:
+    # backtrack until actor_id is target
+    path = []
+    while actor.state != target:
+        path.append((actor.action, actor.state))
+        actor = actor.parent
+    path.reverse()
+    return path
 
 
 def person_id_for_name(name):

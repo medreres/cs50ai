@@ -1,6 +1,7 @@
 import itertools
 import random
 from types import CellType
+from copy import deepcopy
 
 
 class Minesweeper():
@@ -108,8 +109,8 @@ class Sentence():
         """
         if self.count == len(self.cells):
             return self.cells
-        
-        return None
+
+        return set()
 
     def known_safes(self):
         """
@@ -117,8 +118,8 @@ class Sentence():
         """
         if self.count == 0:
             return self.cells
-        
-        return None
+
+        return set()
 
     def mark_mine(self, cell):
         """
@@ -132,24 +133,22 @@ class Sentence():
 
         # remove cell from sentence
         self.cells.remove(cell)
-        
+
         # decrease count of mine
         self.count -= 1
-        
 
     def mark_safe(self, cell):
         """
         Updates internal knowledge representation given the fact that
         a cell is known to be safe.
         """
-         # check if cell is in the sentence
+        # check if cell is in the sentence
         if cell not in self.cells:
             return
 
         # remove cell from sentence
-        self.cells.remove(cell)
-
         # count of mines remain unaffected
+        self.cells.remove(cell)
 
 
 class MinesweeperAI():
@@ -206,7 +205,120 @@ class MinesweeperAI():
             5) add any new sentences to the AI's knowledge base
                if they can be inferred from existing knowledge
         """
-        raise NotImplementedError
+
+        # mark the cell as a move that has been made
+        self.moves_made.add(cell)
+
+        # The function should mark the cell as a safe cell,
+        # updating any sentences that contain the cell as well.
+        self.mark_safe(cell)
+
+        # The function should add a new sentence to the AI’s knowledge base, based on the value of cell and count,
+        # to indicate that count of the cell’s neighbors are mines.
+        # Be sure to only include cells whose state is still undetermined in the sentence.
+
+        # add a new sentence to the AI's knowledge base
+        # based on the value of `cell` and `count`
+
+        neighbours = self.get_neighbours(
+            cell)  # neighbouring cells of cell clicked
+        sentence = Sentence(neighbours, count)
+
+        known_mines, known_safes = sentence.known_mines(), sentence.known_safes()
+        if known_mines:
+            for mine in known_mines:
+                self.mark_mine(mine)
+        elif known_safes:
+            for safe in known_safes:
+                self.mark_safe(safe)
+        else:
+            self.knowledge.append(sentence)
+
+        new_sentences = self.make_inference()
+
+        while new_sentences:
+            for sentence in new_sentences:
+
+                known_mines, known_safes = sentence.known_mines(), sentence.known_safes()
+                if known_mines:
+                    for mine in known_mines:
+                        self.mark_mine(mine)
+                elif known_safes:
+                    for safe in known_safes:
+                        self.mark_safe(safe)
+                else:
+                    self.knowledge.append(sentence)
+
+                
+            new_sentences = self.make_inference()
+
+    def make_inference(self):
+        for knowledge in self.knowledge:
+            known_mines = deepcopy(knowledge.known_mines())
+            known_safes = deepcopy(knowledge.known_safes())
+
+            for mine in known_mines:
+                self.mark_mine(mine)
+
+            for safe in known_safes:
+                self.mark_safe(safe)
+
+
+        inference = []
+
+        # remove all blank sentences
+        self.knowledge = list(filter(lambda x : len(x.cells) != 0, self.knowledge))
+
+        for knowledge in self.knowledge:
+            for knowledge1 in self.knowledge:
+                if knowledge == knowledge1:
+                    continue
+
+                if knowledge.cells.issubset(knowledge1.cells):
+                    sentence = Sentence(
+                        knowledge1.cells - knowledge.cells, knowledge1.count - knowledge.count)
+                    if sentence not in self.knowledge:
+                        inference.append(sentence)
+
+
+
+        return inference
+
+    def get_neighbours(self, cell) -> set:
+        # coordinates of cell
+        i, j = cell
+        # set of neighbouring cells
+        neighbours = set()
+
+        # if there are all 8 neighbours
+        if (i > 0 and j > 0) and (i < 7 and j < 7):
+            for i1 in range(i - 1, i + 2):
+                for j1 in range(j - 1, j + 2):
+                    # leave out the current cell clicked
+                    if i1 == i and j1 == j:
+                        continue
+                    neighbours.add((i1, j1))
+
+            return neighbours
+        # if corner cases
+
+        i_start = i - 1 if i - 1 > -1 else 0
+        j_start = j - 1 if j - 1 > -1 else 0
+
+        i_end = i + 1 if i + 1 < 8 else i
+        j_end = j + 1 if j + 1 < 8 else j
+
+        for i1 in range(i_start, i_end+1):
+            for j1 in range(j_start, j_end+1):
+                # leave out the current cell clicked
+                if i1 == i and j1 == j:
+                    continue
+                elif (i1,j1) in self.safes:
+                    continue
+
+                neighbours.add((i1, j1))
+
+        return neighbours
 
     def make_safe_move(self):
         """
@@ -217,7 +329,11 @@ class MinesweeperAI():
         This function may use the knowledge in self.mines, self.safes
         and self.moves_made, but should not modify any of those values.
         """
-        raise NotImplementedError
+        for safe in self.safes:
+            if safe not in self.moves_made:
+                return safe
+        
+        return None
 
     def make_random_move(self):
         """
@@ -226,4 +342,11 @@ class MinesweeperAI():
             1) have not already been chosen, and
             2) are not known to be mines
         """
-        raise NotImplementedError
+        moves = []
+
+        for i in range(self.width):
+            for j in range(self.height):
+                if (i, j) not in self.moves_made and (i, j) not in self.mines:
+                    return (i,j)
+
+        return None
